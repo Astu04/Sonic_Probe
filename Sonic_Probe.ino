@@ -1,5 +1,3 @@
-//It it returns stk500_recv, press restart when uploading. 
-
 // Super Probe
 //Pro Mini, each output is (almost) 5V and a max of 40mAh, 
 //it would be nice to reduce the individual stress of each pin
@@ -22,19 +20,11 @@
 // 1 - Torch (Short -> toggle, long -> stay on until no pressed)
 // 2 - Laser (Short -> toggle, long -> stay on until no pressed)
 // 3 - Turn on the class projector (Mitsubishi), 
-//     (Short -> toggle, long -> stay on until no pressed)
-//     Also, turn on my TV and switch to AV (TDT) 
-//     A delay for 5 seconds after executing where I can 
-//     press again buttonB for the same codes to send, in case
-//     the device hasn't powered up because I wasn't pointing
-//     properly
-//     Also, it would be nice if I get the codes for all projecors
 // 4 - TV-B-Gone
 // 5 - Just sound
 // 6 - Auto go to sleep
 
 // LIBRARIES 
-#include <ClickButton.h> // Buttons, many functions. Very useful.
 //#include "main.h" //TVB related
 //#include <avr/pgmspace.h> //TVB related
 #include <avr/sleep.h>
@@ -45,13 +35,13 @@
 #define IRLED        9      // LED used to blink when volume too high
 			  // No cambiar, tiene que ser el 9 sí o sí, limitaciones. 
 IRsend irsend; // instantiate IR object
+const int buttonAPin = 2;     // the number of the pushbutton pin
+const int buttonBPin = 3;     // the number of the pushbutton pin
 
 // #include <avr/sleep.h> // Low consumption, to implement
 // CONSTANTS AND VARIABLES
-const int buttonPin1 = 2;
-ClickButton button1(buttonPin1, HIGH, CLICKBTN_PULLUP);
-const int buttonPin2 = 3;
-ClickButton button2(buttonPin2, HIGH, CLICKBTN_PULLUP);
+
+
 //const int buttonA = 2; // To switch among the variables
 //const int buttonB = 3; // To activate, it could be short or long
 // click, see the table at the start of the code for +info. 
@@ -61,14 +51,19 @@ ClickButton button2(buttonPin2, HIGH, CLICKBTN_PULLUP);
 //const int speaker = 4;
 const int TORCH = 10;
 const int LASER = 12;
-//const int debug = 13;
-// Variables from the buttons:
-int button1PushCounter = 0;   // counter for the number of 
+const int debug = 13;
+int buttonAState = 0;         // variable for reading the pushbutton status
+int buttonBState = 0;         // variable for reading the pushbutton status
+int buttonAPushCounter = 0;   // counter for the number of 
                               //button presses
-int button1State = 0;         // current state of the button
-int lastbutton1State = 0;     // previous state of the button
-int button2State = 0;         // current state of the button
-int lastbutton2State = 0;     // previous state of the button
+
+// Variables from the buttons:
+//int button1PushCounter = 0;   // counter for the number of 
+//                              //button presses
+//int button1State = 0;         // current state of the button
+//int lastbutton1State = 0;     // previous state of the button
+//int button2State = 0;         // current state of the button
+//int lastbutton2State = 0;     // previous state of the button
 // int start = 0;             // It loops for 10 seconds&sleep 
                               //or
     
@@ -77,124 +72,103 @@ int lastbutton2State = 0;     // previous state of the button
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Start void setup");
-  Serial.println("Hello world.");
-  pinMode(buttonPin1,INPUT_PULLUP);
-  pinMode(buttonPin2, INPUT_PULLUP);
+
+  pinMode(buttonAPin, INPUT);    
+  pinMode(buttonBPin, INPUT); 
   pinMode(IRLED, OUTPUT);
   pinMode(TORCH, OUTPUT);
-  pinMode(LASER, OUTPUT); 
+  pinMode(LASER, OUTPUT);
+  pinMode(debug, OUTPUT); 
 
-  
-  // Things from clickbutton.h
-          // pinMode(buttonB, INPUT_PULLUP);  
-      // Setup button timers (all in milliseconds / ms)
-      // (These are default if not set, but changeable 
-      // for convenience)
-  button2.debounceTime   = 20;   // Debounce timer in ms
-  // Multiclick isn't used? Just longclick. 
-  //buttonB.multiclickTime = 250;  // Time limit for multi clicks
-  button2.longClickTime  = 1000;  // time until "held-down clicks" 
-                                  //register
-
+//  
+//  // Things from clickbutton.h
+//          // pinMode(buttonB, INPUT_PULLUP);  
+//      // Setup button timers (all in milliseconds / ms)
+//      // (These are default if not set, but changeable 
+//      // for convenience)
+//  button2.debounceTime   = 20;   // Debounce timer in ms
+//  // Multiclick isn't used? Just longclick. 
+//  //buttonB.multiclickTime = 250;  // Time limit for multi clicks
+//  button2.longClickTime  = 1000;  // time until "held-down clicks" 
+//                                  //register
+Serial.println("Starting void loop");
 }
 
 void loop()
 {
-// Initilizing
-Serial.println("Start_init");
+  //Here, we check the buttons. 
+  //First, we check button A: 
+  Serial.println("Checking button A");
+  buttonAState = digitalRead(buttonAPin);
+  if (buttonAState == HIGH) {  //Button A has been pressed, what to do? 
+    Serial.println("Button A is pressed");
+    buttonAPushCounter++;      //Adding +1 to the counter
+      Serial.println(buttonAPushCounter);
+    while (buttonAState == HIGH) { delay(10);   buttonAState = digitalRead(buttonAPin);}
+  }
+  else { //Button A hasn't been pressed, what to do? 
+         //Nothing
+  }
+  //Now, we check button B: 
+//  Serial.println("Checking button B");
+  buttonBState = digitalRead(buttonBPin);
+  if (buttonBState == HIGH) {  //Button B has been pressed, what to do? 
+                               //We check the counter from button A
+        if (buttonAPushCounter == 0) {sleepNow();}            //Zzzz time to Sleep
+        if (buttonAPushCounter == 1) {torch();}            //Torch mode
+        if (buttonAPushCounter == 2) {laser();}            //Laser mode
+        if (buttonAPushCounter == 3) {irmode();}  //IR mode
+//        if (buttonAPushCounter == 4) {goto tvbgone;}          //TVBgone mode
+//        if (buttonAPushCounter == 5) {goto onlysound;}        //Only sound
+        if (buttonAPushCounter >> 5) {sleepNow();}            //Zzzz time to Sleep
+  }
+  else { //Button B hasn't been pressed, what to do? 
+         //Nothing
+  }           
+  if (buttonAPushCounter != 0) { //Showing Button a push counter if it's not 0
+  Serial.print("Counter:"); Serial.println(buttonAPushCounter); }
+}
 
-start: // Here we have to introduce the check for A or B. 
-       // Still no idea how that would be done. 
- lastbutton2State == button2State; 
- for (int i=0; i<=100;i++){
-    button2State = digitalRead(buttonPin2);  
-    if (button2State != lastbutton2State) {
-      // if the state has changed, goto function
-      
-      if (button2State == LOW) {
-          // if the current state is LOW then the button
-          // went from off to on:
 
-        lastbutton2State == button2State; 
-        if (button1PushCounter == 0) {goto sleep;}
-        if (button1PushCounter == 1) {goto torch;}
-        if (button1PushCounter == 2) {goto laser;}
-        if (button1PushCounter == 3) {goto turnonprojector;}
-        if (button1PushCounter == 4) {goto tvbgone;}
-        if (button1PushCounter == 5) {goto onlysound;}   
-        if (button1PushCounter >> 5) {goto sleep;} 
-      }
-      else { // Nothing in else, keeps reading to next       
 
-      }
-      button1State = digitalRead(buttonPin1);  
-      if (button1State != lastbutton1State) {
-          // if the state has changed, increment the counter
-          if (button1State == LOW) {
-             // if the current state is LOW then the button
-             // went from off to on:
-             lastbutton1State == button1State;
-             button1PushCounter++;
-          }
-          else {  // Nothing in else, keeps reading to next     
-          }
-      } 
- 
-  delay(100);
- }
- } 
- 
-       // if the current state is HIGH and the button has
-       // looped here for 10 seconds, if buttonA no pressed, 
- 
-      // go to sleep
-  goto sleep;
-  
 
- 
-  // 1 - Torch (Short -> toggle, long -> stay on until no pressed)
-torch:
-                                       digitalWrite(13, HIGH);
-    digitalWrite(TORCH, HIGH);
-    delay(500);
-    
-    // read the pushbutton input pin
-  button2State = digitalRead(buttonPin2);  
-      if (button2State == LOW) { // if it's pressed
-      // it goes into "on until release mode"
-      // meter un loop aquí que de vueltas hasta que 
-      // se deje de presionar (sea high)  
-      
-      for (int i=0; i<=6000;i++){
-        if (button2State == HIGH) { 
-          goto sleep;  //the button has been unpressed so it
-                       //goes to sleep because it has finished
-                       //it's function
-        }
-        delay(50);
-      } // If it is still pressed, it'll loop until it's not.      
-      }
-      else { // If it has been released, toggle mode 
-             // Wait until buttonBState != lastbuttonBState
-             // Loop until buttonBState = LOW -> button has 
-             // been pressed     
-      for (int i=0; i<=6000;i++){
-        if (button2State == LOW) { 
-          digitalWrite(TORCH, LOW);
-          goto sleep;
-        }
-        delay(50);
-      }
-      goto sleep;
-    }    
-  goto sleep;  
-  // 2 - Laser (Short -> toggle, long -> stay on until
-  // no pressed)
-laser:
-  // 3 - Turn on the class projector (Mitsubishi), 
-turnonprojector:
-  //     (Short -> toggle, long -> stay on until no pressed)
+
+void torch() // Torch mode! We have two modes, toggle and not toggle. 
+{            // We'll have the torch on 200ms before choosing
+  Serial.println("Entering torch mode");
+  delay(200);//Now we'll chose! If it's unpressed -> toggle mode
+             //                 If it's pressed -> on while pressed
+  buttonBState = digitalRead(buttonBPin); // We read button B
+  if (buttonBState == HIGH) { //If it's pressed -> on while pressed
+    // turn LED on:    
+    digitalWrite(TORCH, HIGH);  
+    while (buttonBState == HIGH) { delay(10);   buttonBState = digitalRead(buttonBPin);}
+  }
+  else {                      //If it's unpressed -> toggle mode
+//[TO DO]
+  }
+  sleepNow();
+}
+
+void laser() //This code is the same from the torch, but changing TORCH for LASER
+{            // We'll have the torch on 200ms before choosing
+  Serial.println("Entering laser mode");
+  delay(200);//Now we'll chose! If it's unpressed -> toggle mode
+             //                 If it's pressed -> on while pressed
+  buttonBState = digitalRead(buttonBPin); // We read button B
+  if (buttonBState == HIGH) { //If it's pressed -> on while pressed
+    // turn LED on:    
+    digitalWrite(LASER, HIGH);  
+    while (buttonBState == HIGH) { delay(10);   buttonBState = digitalRead(buttonBPin);}
+  }
+  else {                      //If it's unpressed -> toggle mode
+//[TO DO]
+  }
+  sleepNow();
+}
+
+void irmode() 
+{
  digitalWrite(IRLED,HIGH);  // LED on
     delay(100);
 
@@ -215,23 +189,22 @@ turnonprojector:
      
      
       delay(100);
- goto sleep;  
-  
-  // 4 - TV-B-Gone
-  
-tvbgone: 
-  // 5 - Just sound
-onlysound:
-  // 6 - Auto go to sleep 
-  // When 6 it means more than n-1. 
-  // After sleep, the device shall start again from 'start:'
-sleep: 
-sleepNow();
+    sleepNow();
 }
 
-void sleepNow()
+
+void sleepNow() 
 {
-  set_sleep_mode(buttonPin1);                    // sleep mode is set here
+  Serial.println("Going to sleep");
+  buttonAPushCounter = 0;
+  pinMode(IRLED, LOW);
+  pinMode(TORCH, LOW);
+  pinMode(LASER, LOW);
+  pinMode(debug, LOW); 
+  
+  delay(1000000);  
+  
+  set_sleep_mode(buttonAPin);                    // sleep mode is set here
 
   sleep_enable();                             // enables the sleep bit in the mcucr register
 
@@ -251,5 +224,4 @@ void wakeUpNow()
 {
   // any needed wakeup code can be placed here
 }
-
 
