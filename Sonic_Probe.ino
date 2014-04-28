@@ -42,8 +42,7 @@ const int buttonBPin = 3;     // the number of the pushbutton pin
 // CONSTANTS AND VARIABLES
 
 
-//const int buttonA = 2; // To switch among the variables
-//const int buttonB = 3; // To activate, it could be short or long
+
 // click, see the table at the start of the code for +info. 
 // In an update, I'll use an ear bud as a speaker, with a low 
 // resistor. I think will be able to get a nice enough sounds.
@@ -57,41 +56,17 @@ int buttonBState = 0;         // variable for reading the pushbutton status
 int buttonAPushCounter = 0;   // counter for the number of 
                               //button presses
 
-// Variables from the buttons:
-//int button1PushCounter = 0;   // counter for the number of 
-//                              //button presses
-//int button1State = 0;         // current state of the button
-//int lastbutton1State = 0;     // previous state of the button
-//int button2State = 0;         // current state of the button
-//int lastbutton2State = 0;     // previous state of the button
-// int start = 0;             // It loops for 10 seconds&sleep 
-                              //or
-    
-                             // it goes to the desired function
 
 void setup()
 {
   Serial.begin(9600);
-
   pinMode(buttonAPin, INPUT);    
   pinMode(buttonBPin, INPUT); 
   pinMode(IRLED, OUTPUT);
   pinMode(TORCH, OUTPUT);
   pinMode(LASER, OUTPUT);
   pinMode(debug, OUTPUT); 
-
-//  
-//  // Things from clickbutton.h
-//          // pinMode(buttonB, INPUT_PULLUP);  
-//      // Setup button timers (all in milliseconds / ms)
-//      // (These are default if not set, but changeable 
-//      // for convenience)
-//  button2.debounceTime   = 20;   // Debounce timer in ms
-//  // Multiclick isn't used? Just longclick. 
-//  //buttonB.multiclickTime = 250;  // Time limit for multi clicks
-//  button2.longClickTime  = 1000;  // time until "held-down clicks" 
-//                                  //register
-Serial.println("Starting void loop");
+  Serial.println("Starting void loop");
 }
 
 void loop()
