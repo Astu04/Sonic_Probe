@@ -146,6 +146,16 @@ void irmode()
 {
  digitalWrite(IRLED,HIGH);  // LED on
     delay(100);
+//Turn on projector: 
+      unsigned int S_pwr3[36]={4150,500,500,500,500,500,500,500,500,500,1500,500,1500,500,1500,500,1500,500,4100,500,500,500,1500,500,500,500,500,500,500,500,500,500,1500,500,500,500};
+    for (int txCount = 0; txCount < REPEAT_TX; txCount++) { // how many times to transmit the IR remote  code
+      irsend.sendRaw(S_pwr3,36,38); // Change to match your remote protocol
+    }                              // Syntax: (rawbuf (rawbuf), rawlen (number of entries, frequency (38?))
+    delay(1000);
+// REMOTE_COde 0x1548008 ? 
+
+
+
 
 //Turn off Sony Trinitron TV: 
     for (int txCount = 0; txCount < REPEAT_TX; txCount++) { // how many times to transmit the IR remote  code
@@ -199,4 +209,3 @@ void wakeUpNow()
 {
   // any needed wakeup code can be placed here
 }
-
